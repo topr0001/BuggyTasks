@@ -13,15 +13,41 @@ public partial class LocationPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
-        GetLocation(); 
+        _ = GetLocation();
     }
 
-    Task GetLocation()
+    private async Task GetLocation()
     {
-        var location =  Geolocation.GetLastKnownLocationAsync(); 
-        if (location != null)
+        try
         {
-            Console.WriteLine($"Lat: {location.Latitude}, Long: {location.Longitude}");
+            var location = await Geolocation.GetLastKnownLocationAsync();
+
+            if (location != null)
+            {
+                Console.WriteLine($"Lat: {location.Latitude}, Long: {location.Longitude}");
+                LocationLabel.Text = $"Lat: {location.Latitude}, Long: {location.Longitude}";
+            }
+            else
+            {
+                Console.WriteLine("No cached location available.");
+                LocationLabel.Text = $"No cached location available.";
+            }
+        }
+        catch (FeatureNotSupportedException)
+        {
+            await DisplayAlert("Error", "Location is not supported on this device.", "OK");
+        }
+        catch (FeatureNotEnabledException)
+        {
+            await DisplayAlert("Error", "Location services are not enabled.", "OK");
+        }
+        catch (PermissionException)
+        {
+            await DisplayAlert("Error", "Location permission is denied.", "OK");
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Error", $"An unexpected error occurred: {ex.Message}", "OK");
         }
     }
 }
